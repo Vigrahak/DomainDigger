@@ -4,15 +4,15 @@
  DomainDigger is a powerful and versatile Python-based tool designed to facilitate in-depth analysis of target domains. This tool is specifically tailored for security researchers, penetration testers, and IT professionals seeking to gather critical information about a domain's structure, content, and potential vulnerabilities.
 
 ## Key Features
- URL Archiving: Leverage the Internet Archive's Wayback Machine to archive URLs and track changes over time.
- URL Parameterization: Identify potential vulnerabilities by parameterizing URLs and analyzing the resulting responses.
- Website Crawling: Crawl websites to gather information about their structure, content, and potential entry points.
- Subdomain Enumeration: Enumerate subdomains of a target domain to identify potential attack surfaces.
+ * URL Archiving: Leverage the Internet Archive's Wayback Machine to archive URLs and track changes over time.
+ * URL Parameterization: Identify potential vulnerabilities by parameterizing URLs and analyzing the resulting responses.
+ * Website Crawling: Crawl websites to gather information about their structure, content, and potential entry points.
+ * Subdomain Enumeration: Enumerate subdomains of a target domain to identify potential attack surfaces.
 
 ## System Requirements
- Python 3.6 or later
- pip3 (Python package manager)
- GeckoDriver (automatically installed by webdriver-manager)
+ * Python 3.6 or later
+ * pip3 (Python package manager)
+ * GeckoDriver (automatically installed by webdriver-manager)
 
 ## Installation and Usage
     cd Desktop    
@@ -22,12 +22,12 @@
     python3 domaindigger.py
     
  Select an option from the menu:
-   1: Archive URL
-   2: Parameter URL
-   3: Crawl Website
-   4: Subdomains Enum
-   5: Print Help
-   6: Quit
+  *  1: Archive URL
+  *  2: Parameter URL
+  *  3: Crawl Website
+  *  4: Subdomains Enum
+  *  5: Print Help
+  *  6: Quit
   Follow the prompts to enter the required information
 
 ## Troubleshooting and Support
