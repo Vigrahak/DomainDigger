@@ -22,13 +22,13 @@
     python3 domaindigger.py
     
  Select an option from the menu:
-        1: Archive URL
-        2: Parameter URL
-        3: Crawl Website
-        4: Subdomains Enum
-        5: Print Help
-        6: Quit
- Follow the prompts to enter the required information
+   1: Archive URL
+   2: Parameter URL
+   3: Crawl Website
+   4: Subdomains Enum
+   5: Print Help
+   6: Quit
+  Follow the prompts to enter the required information
 
 ## Troubleshooting and Support
  Ensure you have the latest version of pip3 and Python3 installed
