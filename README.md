@@ -42,16 +42,16 @@ DomainDigger is a powerful and versatile Python-based tool designed to facilitat
     Refer to the documentation and online resources for additional support
 
 ## Licensing and Disclaimer
-DomainDigger is released under the Apache License Version 2.0. See the LICENSE file for more information.
+    DomainDigger is released under the Apache License Version 2.0. See the LICENSE file for more information.
 
 ## Contributions and Feedback
-Contributions are welcome! If you'd like to contribute to DomainDigger, please fork the repository and submit a pull request. Your feedback and suggestions are also appreciated and will help shape the future development of this tool.
+    Contributions are welcome! If you'd like to contribute to DomainDigger, please fork the repository and submit a pull request. Your feedback and suggestions are also appreciated and will help shape the future development of this tool.
 
 ## Disclaimer
-DomainDigger is a tool designed for security research and penetration testing purposes only. Use it responsibly and in accordance with applicable laws and regulations.
+    DomainDigger is a tool designed for security research and penetration testing purposes only. Use it responsibly and in accordance with applicable laws and regulations.
 
 ## Contact
-vigrahak1828@gmail.com
+    vigrahak1828@gmail.com
 
 ## Donation
-https://www.paypal.com/paypalme/SourabhS1828
+    https://www.paypal.com/paypalme/SourabhS1828
