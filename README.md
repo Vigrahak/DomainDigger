@@ -30,12 +30,6 @@
         6: Quit
  Follow the prompts to enter the required information
 
-## Example Use Cases
- Archive a URL: python3 domaindigger.py https://example.com
- Parameterize a URL: python3 domaindigger.py https://example.com/abc
- Crawl a website: python3 domaindigger.py https://example.com
- Enumerate subdomains: python3 domaindigger.py example.com
-
 ## Troubleshooting and Support
  Ensure you have the latest version of pip3 and Python3 installed
  Verify the GeckoDriver version and update it if necessary
