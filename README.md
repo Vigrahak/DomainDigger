@@ -1,5 +1,5 @@
-<h1>DomainDigger: A Comprehensive Domain Analysis Tool</h1>
-<h2>Overview</h2>
+# DomainDigger: A Comprehensive Domain Analysis Tool
+## Overview
 
 DomainDigger is a powerful and versatile Python-based tool designed to facilitate in-depth analysis of target domains. This tool is specifically tailored for security researchers, penetration testers, and IT professionals seeking to gather critical information about a domain's structure, content, and potential vulnerabilities.
 Key Features
