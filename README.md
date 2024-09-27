@@ -34,7 +34,6 @@
 ## Troubleshooting and Support
  * Ensure you have the latest version of pip3 and Python3 installed
  * Verify the GeckoDriver version and update it if necessary
- * For issues or concerns, run the tool with the --verbose flag for more detailed output
  * Refer to the documentation and online resources for additional support
 
 ## Licensing and Disclaimer
