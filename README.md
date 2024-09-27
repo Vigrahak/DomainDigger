@@ -28,7 +28,8 @@
   *  4: Subdomains Enum
   *  5: Print Help
   *  6: Quit
-  Follow the prompts to enter the required information
+    
+ Follow the prompts to enter the required information
 
 ## Troubleshooting and Support
  * Ensure you have the latest version of pip3 and Python3 installed
