@@ -143,6 +143,11 @@ def parameter_url(url):
         print_result(code, line, folder_name)
 
 
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from webdriver_manager.opera import OperaDriverManager
+
 def crawl_website(url):
     print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
     print(f"{LTCYAN}█                    » Crawl Website «                    █")
@@ -153,22 +158,33 @@ def crawl_website(url):
 
     crawled_urls = set()
 
-    options = webdriver.FirefoxOptions()
-    options.headless = False  # Run the browser in non-headless mode
+    # Auto-detect browser
+    browser = None
+    try:
+        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+    except WebDriverException:
+        try:
+            browser = webdriver.Firefox(service=Service(GeckoDriverManager().install()))
+        except WebDriverException:
+            try:
+                browser = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()))
+            except WebDriverException:
+                try:
+                    browser = webdriver.Opera(service=Service(OperaDriverManager().install()))
+                except WebDriverException:
+                    print("Error: Unable to detect browser. Please install a supported browser.")
+                    sys.exit(1)
+
+    print(f"{WHITE} Opening {browser.name}...{RESET}")
 
     try:
-        service = Service(GeckoDriverManager().install())
-        driver = webdriver.Firefox(options=options, service=service)
-    except WebDriverException as e:
-        print(f"Error: {e}")
+        browser.get(url)
+    except TimeoutException:
+        print(f"Error: Failed to load URL {url}. Please check the URL and try again.")
         sys.exit(1)
 
-    print(f"{WHITE} Opening Firefox...{RESET}")
-
-    driver.get(url)
-
     while True:
-        print(f"{YELLOW} Firefox opened. Do you want to login or register in the website? (y/n) {RESET}")
+        print(f"{YELLOW} {browser.name} opened. Do you want to login or register in the website? (y/n) {RESET}")
         choice = input().lower()
         if choice == 'y' or choice == 'n':
             break
@@ -179,7 +195,7 @@ def crawl_website(url):
     if choice == 'y':
         print(f"{YELLOW} Please login or register. Type 'go' when you're done. {RESET}")
         input()
-        cookies = driver.get_cookies()
+        cookies = browser.get_cookies()
         for cookie in cookies:
             print(f"{GREEN}Cookies captured:{RESET} {WHITE}{cookie['name']} = {cookie['value']}{RESET}")
     else:
@@ -187,7 +203,7 @@ def crawl_website(url):
 
     # Crawl the website
     while True:
-        soup = BeautifulSoup(driver.page_source, "html.parser")
+        soup = BeautifulSoup(browser.page_source, "html.parser")
 
         new_urls = []
         for link in soup.find_all("a", href=True):
@@ -216,12 +232,12 @@ def crawl_website(url):
             print_result(code, new_url, folder_name)
 
             try:
-                driver.get(new_url)
+                browser.get(new_url)
             except TimeoutException:
                 print(f"Error: Failed to crawl {new_url}", file=sys.stderr)
 
     # Close the browser
-    driver.quit()
+    browser.quit()
     print(f"{GREEN} Browser closed.{RESET}")
 
     crawled_urls_file = os.path.join(folder_name, urlparse(url).netloc + '_crawled_urls.txt')
