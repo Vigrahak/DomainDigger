@@ -1,21 +1,38 @@
 # domaindigger.py
 
+# Importing Libraries
 import os
 import shutil
 import sys
 import requests
 import json
 import re
-import os
-import sys
-from selenium import webdriver
-from urllib.parse import urlparse, urlunparse, urljoin
 from bs4 import BeautifulSoup
-from selenium.webdriver.firefox.service import Service
-from webdriver_manager.firefox import GeckoDriverManager
-from selenium.common.exceptions import WebDriverException, NoAlertPresentException, TimeoutException
+from urllib.parse import urlparse, urlunparse, urljoin
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+# Selenium WebDriver Libraries
+from selenium import webdriver
+from selenium.webdriver.firefox.service import Service as FirefoxService
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.edge.service import Service as EdgeService
+from selenium.common.exceptions import WebDriverException, NoAlertPresentException, TimeoutException
+
+# WebDriver Manager Libraries
+from webdriver_manager.firefox import GeckoDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
+
+# WebDriver Options Libraries
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.edge.options import Options as EdgeOptions
+
+# WebDriver Libraries
+from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebDriver
+from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebDriver
+from selenium.webdriver.edge.webdriver import WebDriver as EdgeWebDriver
 
 # Define colors
 RED = '\033[1;31m'
@@ -141,12 +158,7 @@ def parameter_url(url):
         url_to_check = f"http://web.archive.org/web/{line}"
         code = get_status_code(url_to_check)
         print_result(code, line, folder_name)
-
-
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.firefox import GeckoDriverManager
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from webdriver_manager.opera import OperaDriverManager
+        
 
 def crawl_website(url):
     print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
@@ -161,19 +173,19 @@ def crawl_website(url):
     # Auto-detect browser
     browser = None
     try:
-        browser = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
+        options = ChromeOptions()
+        browser = ChromeWebDriver(service=ChromeService(ChromeDriverManager().install()), options=options)
     except WebDriverException:
         try:
-            browser = webdriver.Firefox(service=Service(GeckoDriverManager().install()))
+            options = FirefoxOptions()
+            browser = FirefoxWebDriver(service=FirefoxService(GeckoDriverManager().install()), options=options)
         except WebDriverException:
             try:
-                browser = webdriver.Edge(service=Service(EdgeChromiumDriverManager().install()))
+                options = EdgeOptions()
+                browser = EdgeWebDriver(service=EdgeService(EdgeChromiumDriverManager().install()), options=options)
             except WebDriverException:
-                try:
-                    browser = webdriver.Opera(service=Service(OperaDriverManager().install()))
-                except WebDriverException:
-                    print("Error: Unable to detect browser. Please install a supported browser.")
-                    sys.exit(1)
+                print("Error: Unable to detect browser. Please install a supported browser.")
+                sys.exit(1)
 
     print(f"{WHITE} Opening {browser.name}...{RESET}")
 
@@ -225,7 +237,7 @@ def crawl_website(url):
 
         for new_url in new_urls:
             crawled_urls.add(new_url)
-            with open(os.path.join(folder_name, f"{urlparse(url).netloc}_crawled_urls.txt"), "a") as f:
+            with open(os.path.join(folder_name, f"{urlparse(url).netloc }_crawled_urls.txt"), "a") as f:
                 f.write(new_url + "\n")
 
             code = get_status_code(new_url)
