@@ -36,12 +36,6 @@ BLUE = '\033[1;34m'
 WHITE = '\033[1;37m'
 RESET = '\033[0m'
 
-# Define HTTP status code ranges
-HTTP_STATUS_CODE_SUCCESS = 200
-HTTP_STATUS_CODE_REDIRECT = 300
-HTTP_STATUS_CODE_CLIENT_ERROR = 400
-HTTP_STATUS_CODE_SERVER_ERROR = 500
-
 # Define hardcoded extensions
 IGNORED_EXTENSIONS = ['txt', 'pdf', 'doc',
                       'docx', 'xls', 'xlsx', 'ppt', 'pptx']
@@ -61,7 +55,7 @@ def print_help():
     print("")
 
 def validate_and_check_url(url):
-    protocol_pattern = r"^https?://"
+    protocol_pattern = r"^https?"
 
     # Add protocol to URL if it's not present
     if not re.match(protocol_pattern, url):
@@ -78,19 +72,20 @@ def validate_and_check_url(url):
         return True
     except requests.RequestException as e:
         logging.error(f"Error: {e}")
+        print(f"{RED}Error: {WHITE}{e}{RESET}")
         print(f"{RED}URL is not reachable.{RESET}")
-        print(f"{RED}Error: {e}{RESET}")
         return False
 
 def get_status_code(url):
     try:
         headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+        }
         response = requests.get(url, headers=headers, timeout=5, stream=True, allow_redirects=True, verify=False)
         return response.status_code
     except requests.RequestException as e:
         logging.error(f"Error: {e}")
-        print(f"{RED}Error: {e}{RESET}")
+        print(f"{RED}Error: {WHITE}{e}{RESET}")
         return None
 
 def clear_results():
@@ -221,7 +216,18 @@ def crawl_website(url):
         browser.get(url)
     except TimeoutException:
         logging.error(f"Error: Failed to load URL {url}. Please check the URL and try again.")
+        print(f"{RED}Error: {WHITE}Failed to load URL {url}. Please check the URL and try again.{RESET}")
+        browser.quit()
         sys.exit(1)
+    except WebDriverException as e:
+        if "RemoteError" in str(e) or "UnknownError" in str(e):
+            print(f"{RED}Error: {WHITE}Failed to connect to the website. Please check your internet connection and try again.{RESET}")
+            browser.quit()
+            sys.exit(1)
+        else:
+            print(f"{RED}Error: {WHITE}{e}{RESET}")
+            browser.quit()
+            sys.exit(1)
 
     while True:
         print(f"{YELLOW} {browser.name} opened. Do you want to login or register in the website? (y/n) {RESET}")
@@ -229,7 +235,7 @@ def crawl_website(url):
         if choice == 'y' or choice == 'n':
             break
         else:
-            print(f"{RED} Invalid choice. Please enter 'y' or 'n'. {RESET}")
+            print(f"{RED}Invalid choice. Please enter 'y' or 'n'.{RESET}")
 
     cookies = None
     if choice == 'y':
@@ -277,6 +283,15 @@ def crawl_website(url):
                 browser.get(new_url)
             except TimeoutException:
                 logging.error(f"Error: Failed to crawl {new_url}")
+            except WebDriverException as e:
+                if "RemoteError" in str(e) or "UnknownError" in str(e):
+                    print(f"{RED}Error: {WHITE}Failed to connect to the website. Please check your internet connection and try again.{RESET}")
+                    browser.quit()
+                    sys.exit(1)
+                else:
+                    print(f"{RED}Error: {WHITE}{e}{RESET}")
+                    browser.quit()
+                    sys.exit(1)
 
         iteration += 1
 
@@ -313,7 +328,7 @@ def subdomains_enum(url):
         return
 
     if response.status_code != 200:
-        logging.error(f"Failed to retrieve results for url {url}. Status code: {response.status_code}")
+        logging.error(f"Failed to retrieve results for url {url}. Status code: {response.status_code }")
         print(f"{RED}Failed to retrieve results for url {url}. Status code: {response.status_code}{RESET}")
         return
 
@@ -364,7 +379,7 @@ def main():
                             archive_url(url)
                             break
                         else:
-                            print("Invalid URL. Please try again.")
+                            print(f"{WHITE}Please ensure the URL is correct and your internet connection is stable.{RESET}")
                 elif choice == "2":
                     while True:
                         url = input(f"{GREEN}Enter the URL (e.g. https://example.com/abc){RESET}: ")
@@ -375,7 +390,7 @@ def main():
                             parameter_url(url)
                             break
                         else:
-                            print("Invalid URL. Please try again.")
+                            print(f"{WHITE}Please ensure the URL is correct and your internet connection is stable.{RESET}")
                 elif choice == "3":
                     while True:
                         url = input(f"{GREEN}Enter the URL (e.g. https://example.com){RESET}: ")
@@ -389,7 +404,7 @@ def main():
                             crawl_website(url)
                             break
                         else:
-                            print("Invalid URL. Please try again.")
+                            print(f"{WHITE}Please ensure the URL is correct and your internet connection is stable.{RESET}")
                 elif choice == "4":
                     while True:
                         url = input(f"{GREEN}Enter the domain (e.g. example.com){RESET}: ")
