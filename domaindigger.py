@@ -11,25 +11,18 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urlunparse, urljoin
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-
-# Selenium WebDriver Libraries
+import logging
 from selenium import webdriver
 from selenium.webdriver.firefox.service import Service as FirefoxService
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.edge.service import Service as EdgeService
 from selenium.common.exceptions import WebDriverException, NoAlertPresentException, TimeoutException
-
-# WebDriver Manager Libraries
 from webdriver_manager.firefox import GeckoDriverManager
 from webdriver_manager.chrome import ChromeDriverManager
 from webdriver_manager.microsoft import EdgeChromiumDriverManager
-
-# WebDriver Options Libraries
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.edge.options import Options as EdgeOptions
-
-# WebDriver Libraries
 from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebDriver
 from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebDriver
 from selenium.webdriver.edge.webdriver import WebDriver as EdgeWebDriver
@@ -51,8 +44,7 @@ HTTP_STATUS_CODE_SERVER_ERROR = 500
 
 # Define hardcoded extensions
 IGNORED_EXTENSIONS = ['txt', 'pdf', 'doc',
-    'docx', 'xls', 'xlsx', 'ppt', 'pptx']
-
+                      'docx', 'xls', 'xlsx', 'ppt', 'pptx']
 
 def print_banner():
     print(f"{BLUE}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
@@ -62,12 +54,11 @@ def print_banner():
     print(f"{LTCYAN}                                              - By Vigrahak{RESET}")
     print(f"{RED}Have a beer :  {LTCYAN}https://www.paypal.com/paypalme/SourabhS1828")
     print("")
-    
-def print_help():    
+
+def print_help():
     print(f"{WHITE}Usage:{RESET} {BLUE}python3 domain_digger.py{RESET}")
     print(f"{WHITE}Contact:{RESET} {LTCYAN}[vigrahak1828@gmail.com]{RESET}")
     print("")
-
 
 def validate_and_check_url(url):
     protocol_pattern = r"^https?://"
@@ -85,10 +76,11 @@ def validate_and_check_url(url):
         print(f"{WHITE}Redirected to:{RESET} {YELLOW} {response.url}{RESET}")
         print(f"{GREEN}URL is reachable.{RESET}")
         return True
-    except requests.RequestException:
+    except requests.RequestException as e:
+        logging.error(f"Error: {e}")
         print(f"{RED}URL is not reachable.{RESET}")
+        print(f"{RED}Error: {e}{RESET}")
         return False
-
 
 def get_status_code(url):
     try:
@@ -96,34 +88,55 @@ def get_status_code(url):
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
         response = requests.get(url, headers=headers, timeout=5, stream=True, allow_redirects=True, verify=False)
         return response.status_code
-    except requests.RequestException:
+    except requests.RequestException as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
         return None
 
+def clear_results():
+    try:
+        if os.path.exists("Results"):
+            shutil.rmtree("Results")
+            print(f"{GREEN}Existing results cleared.{RESET}")
+    except OSError as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
 
 def create_result_folder():
-    if not os.path.exists("Results"):
-        os.makedirs("Results")
-
+    clear_results()
+    try:
+        if not os.path.exists("Results"):
+            os.makedirs("Results")
+    except OSError as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
 
 def create_option_folder(option_name, url):
-    folder_name = f"Results/{option_name}/{urlparse(url).netloc.replace('www.', '')}"
-    if not os.path.exists(folder_name):
-        os.makedirs(folder_name)
-    return folder_name
-
+    try:
+        folder_name = f"Results/{option_name}/{urlparse(url).netloc.replace('www.', '')}"
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+        return folder_name
+    except OSError as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
+        return None
 
 def print_result(code, url, folder_name):
-    if code is None:
-        color = RED
-        code = "Unknown"
-        filename = "unknown.txt"
-    else:
-        color = GREEN if 200 <= code < 300 else YELLOW if 300 <= code < 400 else RED if 400 <= code < 500 else BLUE
-        filename = f"{code}.txt"
-    print(f"  {BLUE}Status: {color}{code}{RESET}\t : {url}")
-    with open(os.path.join(folder_name, filename), "a") as f:
-        f.write(f"{code}\t{url}\n")
-
+    try:
+        if code is None:
+            color = RED
+            code = "Unknown"
+            filename = "unknown.txt"
+        else:
+            color = GREEN if 200 <= code < 300 else YELLOW if 300 <= code < 400 else RED if 400 <= code < 500 else BLUE
+            filename = f"{code}.txt"
+        print(f"  {BLUE}Status: {color}{code}{RESET}\t : {url}")
+        with open(os.path.join(folder_name, filename), "a") as f:
+            f.write(f"{code}\t{url}\n")
+    except OSError as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
 
 def archive_url(url):
     print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
@@ -133,11 +146,17 @@ def archive_url(url):
 
     folder_name = create_option_folder("Archive_URL", url)
 
-    for line in requests.get(f"https://web.archive.org/cdx/search/cdx?url={url}/*&output=txt&collapse=urlkey&fl=original&page=/").text.splitlines():
-        url_to_check = f"http://web.archive.org/web/{line}"
-        code = get_status_code(url_to_check)
-        print_result(code, line, folder_name)
+    if folder_name is None:
+        return
 
+    try:
+        for line in requests.get(f"https://web.archive.org/cdx/search/cdx?url={url}/*&output=txt&collapse=urlkey&fl=original&page=/").text.splitlines():
+            url_to_check = f"http://web.archive.org/web/{line}"
+            code = get_status_code(url_to_check)
+            print_result(code, line, folder_name)
+    except requests.RequestException as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
 
 def parameter_url(url):
     print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
@@ -147,18 +166,24 @@ def parameter_url(url):
 
     folder_name = create_option_folder("Parameter_URL", url)
 
-    url = f"https://web.archive.org/cdx/search/cdx?url={url}/*&output=txt&collapse=urlkey&fl=original&page=/"
+    if folder_name is None:
+        return
 
-    for line in requests.get(url).text.splitlines():
-        if "?" not in line and "=" not in line:
-            continue
-        for ext in IGNORED_EXTENSIONS:
-            if line.endswith(f".{ext}"):
+    try:
+        url = f"https://web.archive.org/cdx/search/cdx?url={url}/*&output=txt&collapse=urlkey&fl=original&page=/"
+
+        for line in requests.get(url).text.splitlines():
+            if "?" not in line and "=" not in line:
                 continue
-        url_to_check = f"http://web.archive.org/web/{line}"
-        code = get_status_code(url_to_check)
-        print_result(code, line, folder_name)
-        
+            for ext in IGNORED_EXTENSIONS:
+                if line.endswith(f".{ext}"):
+                    continue
+            url_to_check = f"http://web.archive.org/web/{line}"
+            code = get_status_code(url_to_check)
+            print_result(code, line, folder_name)
+    except requests.RequestException as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
 
 def crawl_website(url):
     print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
@@ -167,6 +192,9 @@ def crawl_website(url):
     print("")
 
     folder_name = create_option_folder("Crawl_Website", url)
+
+    if folder_name is None:
+        return
 
     crawled_urls = set()
 
@@ -184,7 +212,7 @@ def crawl_website(url):
                 options = EdgeOptions()
                 browser = EdgeWebDriver(service=EdgeService(EdgeChromiumDriverManager().install()), options=options)
             except WebDriverException:
-                print("Error: Unable to detect browser. Please install a supported browser.")
+                logging.error("Error: Unable to detect browser. Please install a supported browser.")
                 sys.exit(1)
 
     print(f"{WHITE} Opening {browser.name}...{RESET}")
@@ -192,7 +220,7 @@ def crawl_website(url):
     try:
         browser.get(url)
     except TimeoutException:
-        print(f"Error: Failed to load URL {url}. Please check the URL and try again.")
+        logging.error(f"Error: Failed to load URL {url}. Please check the URL and try again.")
         sys.exit(1)
 
     while True:
@@ -214,7 +242,9 @@ def crawl_website(url):
         print(f"{YELLOW} Proceeding without login or registration... {RESET}")
 
     # Crawl the website
-    while True:
+    max_iterations = 100
+    iteration = 0
+    while iteration < max_iterations:
         soup = BeautifulSoup(browser.page_source, "html.parser")
 
         new_urls = []
@@ -246,7 +276,9 @@ def crawl_website(url):
             try:
                 browser.get(new_url)
             except TimeoutException:
-                print(f"Error: Failed to crawl {new_url}", file=sys.stderr)
+                logging.error(f"Error: Failed to crawl {new_url}")
+
+        iteration += 1
 
     # Close the browser
     browser.quit()
@@ -255,8 +287,7 @@ def crawl_website(url):
     crawled_urls_file = os.path.join(folder_name, urlparse(url).netloc + '_crawled_urls.txt')
     print(f"{GREEN} CRAWLED URLs : {RESET}{LTCYAN}{crawled_urls_file}{RESET}")
     print(f"{GREEN} Total URLs crawled: {len(crawled_urls)}{RESET}")
-    
-    
+
 def subdomains_enum(url):
     print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
     print(f"{LTCYAN}█                   » SubDomains Enum «                   █")
@@ -267,23 +298,43 @@ def subdomains_enum(url):
 
     folder_name = create_option_folder("SubDomains_Enum", url)
     domain_folder = os.path.join(folder_name, url)
-    os.makedirs(domain_folder, exist_ok=True)
-
-    response = requests.get(f"https://crt.sh?q=%.{url}&output=json")
-
-    if response.status_code != 200:
-        print(f"Failed to retrieve results for url {url}. Status code: {response.status_code}")
+    try:
+        os.makedirs(domain_folder, exist_ok=True)
+    except OSError as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
         return
 
-    results = [item["common_name"] for item in response.json()]
+    try:
+        response = requests.get(f"https://crt.sh?q=%.{url}&output=json")
+    except requests.RequestException as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
+        return
+
+    if response.status_code != 200:
+        logging.error(f"Failed to retrieve results for url {url}. Status code: {response.status_code}")
+        print(f"{RED}Failed to retrieve results for url {url}. Status code: {response.status_code}{RESET}")
+        return
+
+    try:
+        results = [item["common_name"] for item in response.json()]
+    except json.JSONDecodeError as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
+        return
 
     for result in results:
         code = get_status_code(f"http://{result}")
         print_result(code, result, domain_folder)
 
-    with open(os.path.join(domain_folder, f"{url}.txt"), "w") as f:
-        for result in results:
-            f.write(f"{result}\n")
+    try:
+        with open(os.path.join(domain_folder, f"{url}.txt"), "w") as f:
+            for result in results:
+                f.write(f"{result}\n")
+    except OSError as e:
+        logging.error(f"Error: {e}")
+        print(f"{RED}Error: {e}{RESET}")
 
     print(f"{GREEN} Total URLs retrieved: {len(results)}{RESET}")
     print(f"{GREEN}[+] Output saved in {os.path.join(domain_folder, url)}.txt{RESET}")
