@@ -12,7 +12,6 @@
 ## System Requirements
  * Python 3.6 or later
  * pip3 (Python package manager)
- * GeckoDriver (automatically installed by webdriver-manager)
 
 ## Installation and Usage
     cd Desktop    
