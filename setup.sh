@@ -3,11 +3,10 @@
 # Install required packages using apt
 sudo apt update
 sudo apt install -y python3-pip
-sudo apt install -y python3-beautifulsoup4
 sudo apt install -y python3-requests
-sudo apt install -y python3-selenium
-sudo apt install -y python3-webdriver-manager
+sudo apt install -y python3-bs4
 sudo apt install -y python3-urllib3
+sudo apt install -y python3-selenium
 
 # Upgrade existing packages using apt
 apt upgrade -y
