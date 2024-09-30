@@ -14,10 +14,12 @@
  * pip3 (Python package manager)
 
 ## Installation and Usage
+    sudo apt update && sudo apt full-upgrade -y  
     cd Desktop    
     git clone https://github.com/Vigrahak/DomainDigger.git
     cd DomainDigger
-    sudo bash ./setup.sh
+    sudo apt-get install --upgrade -y python3-pip python3-requests python3-bs4 python3-urllib3 python3-selenium
+    pip3 install --upgrade requests beautifulsoup4 urllib3 selenium webdriver-manager --break-system-packages
     
  Select an option from the menu:
   *  1: Archive URL
