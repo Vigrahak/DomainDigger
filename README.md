@@ -17,7 +17,8 @@
     cd Desktop    
     git clone https://github.com/Vigrahak/DomainDigger.git
     cd DomainDigger
-    sudo bash ./install.sh
+    sudo pip3 install -r requirements.txt
+    sudo pip3 install --upgrade -r requirements.txt
     
  Select an option from the menu:
   *  1: Archive URL
