@@ -17,9 +17,7 @@
     cd Desktop    
     git clone https://github.com/Vigrahak/DomainDigger.git
     cd DomainDigger
-    sudo apt-get install python3-pip python3-requests python3-bs4 python3-urllib3 python3-selenium
-    pip3 install requests beautifulsoup4 urllib3 selenium webdriver-manager --break-system-packages
-    python3 domaindigger.py
+    sudo bash ./install.sh
     
  Select an option from the menu:
   *  1: Archive URL
