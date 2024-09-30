@@ -61,12 +61,10 @@ def validate_and_check_url(url):
     if not re.match(protocol_pattern, url):
         url = f"http://{url}"
 
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-    }
+    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
 
     try:
-        response = requests.get(url, headers=headers, timeout=5, stream=True, allow_redirects=True, verify=False)
+        response = requests.get(url, headers=headers, timeout=30, stream=True, allow_redirects=True, verify=False)
         print(f"{WHITE}Redirected to:{RESET} {YELLOW} {response.url}{RESET}")
         print(f"{GREEN}URL is reachable.{RESET}")
         return True
@@ -75,42 +73,33 @@ def validate_and_check_url(url):
         print(f"{RED}Error: {WHITE}{e}{RESET}")
         print(f"{RED}URL is not reachable.{RESET}")
         return False
+import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 def get_status_code(url):
     try:
-        headers = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
-        }
-        response = requests.get(url, headers=headers, timeout=5, stream=True, allow_redirects=True, verify=False)
+        session = requests.Session()
+        retry = Retry(connect=5, backoff_factor=0.5)
+        adapter = HTTPAdapter(max_retries=retry)
+        session.mount('http://', adapter)
+        session.mount('https://', adapter)
+        response = session.get(url, timeout=10)
         return response.status_code
     except requests.RequestException as e:
         logging.error(f"Error: {e}")
-        print(f"{RED}Error: {WHITE}{e}{RESET}")
+        print(f"{RED}Error: {e}{RESET}")
         return None
 
-def clear_results():
-    try:
-        if os.path.exists("Results"):
-            shutil.rmtree("Results")
-            print(f"{GREEN}Existing results cleared.{RESET}")
-    except OSError as e:
-        logging.error(f"Error: {e}")
-        print(f"{RED}Error: {e}{RESET}")
-
 def create_result_folder():
-    clear_results()
-    try:
-        if not os.path.exists("Results"):
-            os.makedirs("Results")
-    except OSError as e:
-        logging.error(f"Error: {e}")
-        print(f"{RED}Error: {e}{RESET}")
+    if not os.path.exists("Results"):
+        os.makedirs("Results")
 
 def create_option_folder(option_name, url):
     try:
         folder_name = f"Results/{option_name}/{urlparse(url).netloc.replace('www.', '')}"
-        if not os.path.exists(folder_name):
-            os.makedirs(folder_name)
+        shutil.rmtree(folder_name, ignore_errors=True)  # pehle wala folder delete kiya hai
+        os.makedirs(folder_name, exist_ok=True)  # naya folder banaya hai
         return folder_name
     except OSError as e:
         logging.error(f"Error: {e}")
@@ -122,13 +111,15 @@ def print_result(code, url, folder_name):
         if code is None:
             color = RED
             code = "Unknown"
-            filename = "unknown.txt"
         else:
             color = GREEN if 200 <= code < 300 else YELLOW if 300 <= code < 400 else RED if 400 <= code < 500 else BLUE
-            filename = f"{code}.txt"
         print(f"  {BLUE}Status: {color}{code}{RESET}\t : {url}")
-        with open(os.path.join(folder_name, filename), "a") as f:
-            f.write(f"{code}\t{url}\n")
+        if code == 200:
+            with open(os.path.join(folder_name, "200_urls.txt"), "a") as f:
+                f.write(f"{code}\t{url}\n")
+        else:
+            with open(os.path.join(folder_name, "all_urls.txt"), "a") as f:
+                f.write(f"{code}\t{url}\n")
     except OSError as e:
         logging.error(f"Error: {e}")
         print(f"{RED}Error: {e}{RESET}")
