@@ -1,6 +1,7 @@
 # domaindigger.py
 
 # Importing Libraries
+import logging
 import os
 import shutil
 import sys
@@ -11,21 +12,22 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urlunparse, urljoin
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-import logging
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 from selenium import webdriver
-from selenium.webdriver.firefox.service import Service as FirefoxService
-from selenium.webdriver.chrome.service import Service as ChromeService
-from selenium.webdriver.edge.service import Service as EdgeService
-from selenium.common.exceptions import WebDriverException, NoAlertPresentException, TimeoutException
-from webdriver_manager.firefox import GeckoDriverManager
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.microsoft import EdgeChromiumDriverManager
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.edge.options import Options as EdgeOptions
-from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebDriver
-from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebDriver
 from selenium.webdriver.edge.webdriver import WebDriver as EdgeWebDriver
+from selenium.webdriver.chrome.webdriver import WebDriver as ChromeWebDriver
+from selenium.webdriver.firefox.webdriver import WebDriver as FirefoxWebDriver
+from selenium.webdriver.edge.options import Options as EdgeOptions
+from selenium.webdriver.chrome.options import Options as ChromeOptions
+from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from webdriver_manager.microsoft import EdgeChromiumDriverManager
+from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.firefox import GeckoDriverManager
+from selenium.common.exceptions import WebDriverException, NoAlertPresentException, TimeoutException
+from selenium.webdriver.edge.service import Service as EdgeService
+from selenium.webdriver.chrome.service import Service as ChromeService
+from selenium.webdriver.firefox.service import Service as FirefoxService
 
 # Define colors
 RED = '\033[1;31m'
@@ -37,13 +39,12 @@ WHITE = '\033[1;37m'
 RESET = '\033[0m'
 
 # Define hardcoded extensions
-IGNORED_EXTENSIONS = ['txt', 'pdf', 'doc',
-                      'docx', 'xls', 'xlsx', 'ppt', 'pptx']
+IGNORED_EXTENSIONS = ['txt', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']
 
 def print_banner():
-    print(f"{BLUE}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
-    print(f"{BLUE}█                    » DomainDigger «                     █")
-    print(f"{BLUE}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
+    print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
+    print(f"{LTCYAN}█                    » DomainDigger «                     █")
+    print(f"{LTCYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
     print("")
     print(f"{LTCYAN}                                              - By Vigrahak{RESET}")
     print(f"{RED}Have a beer :  {LTCYAN}https://www.paypal.com/paypalme/SourabhS1828")
@@ -56,15 +57,14 @@ def print_help():
 
 def validate_and_check_url(url):
     protocol_pattern = r"^https?"
-
+    
     # Add protocol to URL if it's not present
     if not re.match(protocol_pattern, url):
+        protocol = input(f"{GREEN}Please specify the protocol (http/https) for {url}: {RESET}")
         url = f"http://{url}"
-
-    headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'}
-
+    
     try:
-        response = requests.get(url, headers=headers, timeout=30, stream=True, allow_redirects=True, verify=False)
+        response = requests.get(url, timeout=30, stream=True, allow_redirects=True, verify=False)
         print(f"{WHITE}Redirected to:{RESET} {YELLOW} {response.url}{RESET}")
         print(f"{GREEN}URL is reachable.{RESET}")
         return True
@@ -73,25 +73,22 @@ def validate_and_check_url(url):
         print(f"{RED}Error: {WHITE}{e}{RESET}")
         print(f"{RED}URL is not reachable.{RESET}")
         return False
-import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 
 def get_status_code(url):
     try:
         session = requests.Session()
-        retry = Retry(connect=5, backoff_factor=0.5)
+        retry = Retry(connect=10, backoff_factor=1)
         adapter = HTTPAdapter(max_retries=retry)
         session.mount('http://', adapter)
         session.mount('https://', adapter)
-        response = session.get(url, timeout=10)
+        response = session.get(url, timeout=30)
         return response.status_code
     except requests.RequestException as e:
         logging.error(f"Error: {e}")
         print(f"{RED}Error: {e}{RESET}")
         return None
 
-def create_result_folder():
+def create_result_folder ():
     if not os.path.exists("Results"):
         os.makedirs("Results")
 
@@ -136,7 +133,9 @@ def archive_url(url):
         return
 
     try:
-        for line in requests.get(f"https://web.archive.org/cdx/search/cdx?url={url}/*&output=txt&collapse=urlkey&fl=original&page=/").text.splitlines():
+        response = requests.get(url, allow_redirects=True)
+        redirected_url = response.url
+        for line in requests.get(f"https://web.archive.org/cdx/search/cdx?url={redirected_url}/*&output=txt&collapse=urlkey&fl=original&page=/").text.splitlines():
             url_to_check = f"http://web.archive.org/web/{line}"
             code = get_status_code(url_to_check)
             print_result(code, line, folder_name)
@@ -220,6 +219,9 @@ def crawl_website(url):
             browser.quit()
             sys.exit(1)
 
+    # Get the redirected URL
+    redirected_url = browser.current_url
+
     while True:
         print(f"{YELLOW} {browser.name} opened. Do you want to login or register in the website? (y/n) {RESET}")
         choice = input().lower()
@@ -234,7 +236,7 @@ def crawl_website(url):
         input()
         cookies = browser.get_cookies()
         for cookie in cookies:
-            print(f"{GREEN}Cookies captured:{RESET} {WHITE}{cookie['name']} = {cookie['value']}{RESET}")
+            print(f"{GREEN}Cookies captured:{RESET} {YELLOW}{cookie['name']} = {cookie['value']}{RESET}")
     else:
         print(f"{YELLOW} Proceeding without login or registration... {RESET}")
 
@@ -254,21 +256,19 @@ def crawl_website(url):
             if href.startswith("http://") or href.startswith("https://"):
                 crawled_url = href
             else:
-                crawled_url = urljoin(url, href)
+                crawled_url = urljoin(redirected_url, href)
 
-            if crawled_url not in crawled_urls and urlparse(crawled_url).netloc == urlparse(url).netloc:
+            if crawled_url not in crawled_urls and urlparse(crawled_url).netloc == urlparse(redirected_url).netloc:
                 new_urls.append(crawled_url)
 
         if not new_urls:
             break
 
         for new_url in new_urls:
-            crawled_urls.add(new_url)
-            with open(os.path.join(folder_name, f"{urlparse(url).netloc }_crawled_urls.txt"), "a") as f:
+            crawled_urls.add(new_url )
+            print(f"{GREEN} Crawled URL: {RESET}{WHITE}{new_url}{RESET}")
+            with open(os.path.join(folder_name, f"{urlparse(redirected_url).netloc}_crawled_urls.txt"), "a") as f:
                 f.write(new_url + "\n")
-
-            code = get_status_code(new_url)
-            print_result(code, new_url, folder_name)
 
             try:
                 browser.get(new_url)
@@ -290,9 +290,10 @@ def crawl_website(url):
     browser.quit()
     print(f"{GREEN} Browser closed.{RESET}")
 
-    crawled_urls_file = os.path.join(folder_name, urlparse(url).netloc + '_crawled_urls.txt')
+    crawled_urls_file = os.path.join(folder_name, urlparse(redirected_url).netloc + '_crawled_urls.txt')
     print(f"{GREEN} CRAWLED URLs : {RESET}{LTCYAN}{crawled_urls_file}{RESET}")
     print(f"{GREEN} Total URLs crawled: {len(crawled_urls)}{RESET}")
+
 
 def subdomains_enum(url):
     print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
@@ -319,8 +320,10 @@ def subdomains_enum(url):
         return
 
     if response.status_code != 200:
-        logging.error(f"Failed to retrieve results for url {url}. Status code: {response.status_code }")
-        print(f"{RED}Failed to retrieve results for url {url}. Status code: {response.status_code}{RESET}")
+        logging.error(
+            f"Failed to retrieve results for url {url}. Status code: {response.status_code }")
+        print(
+            f"{RED}Failed to retrieve results for url {url}. Status code: {response.status_code}{RESET}")
         return
 
     try:
@@ -343,7 +346,9 @@ def subdomains_enum(url):
         print(f"{RED}Error: {e}{RESET}")
 
     print(f"{GREEN} Total URLs retrieved: {len(results)}{RESET}")
-    print(f"{GREEN}[+] Output saved in {os.path.join(domain_folder, url)}.txt{RESET}")
+    print(
+        f"{GREEN}[+] Output saved in {os.path.join(domain_folder, url)}.txt{RESET}")
+
 
 def main():
     create_result_folder()
@@ -362,45 +367,57 @@ def main():
 
                 if choice == "1":
                     while True:
-                        url = input(f"{GREEN}Enter the URL (e.g. https://example.com/abc){RESET}: ")
+                        url = input(
+                            f"{GREEN}Enter the URL (e.g. https://example.com/abc){RESET}: ")
                         if not url.startswith("http://") and not url.startswith("https://"):
-                            print(f"{RED}Error: Please provide the full URL with protocol (http/https).{RESET}")
+                            print(
+                                f"{RED}Error: Please provide the full URL with protocol (http/https).{RESET}")
                             continue
                         if validate_and_check_url(url):
                             archive_url(url)
                             break
                         else:
-                            print(f"{WHITE}Please ensure the URL is correct and your internet connection is stable.{RESET}")
+                            print(
+                                f"{WHITE}Please ensure the URL is correct and your internet connection is stable.{RESET}")
                 elif choice == "2":
                     while True:
-                        url = input(f"{GREEN}Enter the URL (e.g. https://example.com/abc){RESET}: ")
+                        url = input(
+                            f"{GREEN}Enter the URL (e.g. https://example.com/abc){RESET}: ")
                         if not url.startswith("http://") and not url.startswith("https://"):
-                            print(f"{RED}Error: Please provide the full URL with protocol (http/https).{RESET}")
+                            print(
+                                f"{RED}Error: Please provide the full URL with protocol (http/https).{RESET}")
                             continue
                         if validate_and_check_url(url):
                             parameter_url(url)
                             break
                         else:
-                            print(f"{WHITE}Please ensure the URL is correct and your internet connection is stable.{RESET}")
+                            print(
+                                f"{WHITE}Please ensure the URL is correct and your internet connection is stable.{RESET}")
                 elif choice == "3":
                     while True:
-                        url = input(f"{GREEN}Enter the URL (e.g. https://example.com){RESET}: ")
+                        url = input(
+                            f"{GREEN}Enter the URL (e.g. https://example.com){RESET}: ")
                         if not url.startswith("http://") and not url.startswith("https://"):
-                            print(f"{RED}Error: Please provide the full URL with protocol (http/https).{RESET}")
+                            print(
+                                f"{RED}Error: Please provide the full URL with protocol (http/https).{RESET}")
                             continue
                         parsed_url = urlparse(url)
                         if parsed_url.fragment:
-                            url = urlunparse((parsed_url.scheme, parsed_url.netloc, parsed_url.path, parsed_url.params, parsed_url.query, ''))
+                            url = urlunparse(
+                                (parsed_url.scheme, parsed_url.netloc, parsed_url.path, parsed_url.params, parsed_url.query, ''))
                         if validate_and_check_url(url):
                             crawl_website(url)
                             break
                         else:
-                            print(f"{WHITE}Please ensure the URL is correct and your internet connection is stable.{RESET}")
+                            print(
+                                f"{WHITE}Please ensure the URL is correct and your internet connection is stable.{RESET}")
                 elif choice == "4":
                     while True:
-                        url = input(f"{GREEN}Enter the domain (e.g. example.com){RESET}: ")
+                        url = input(
+                            f"{GREEN}Enter the domain (e.g. example.com){RESET}: ")
                         if url.startswith("http://") or url.startswith("https://"):
-                            print(f"{RED}Error: Please provide the domain only (without http/https protocol).{RESET}")
+                            print(
+                                f"{RED}Error: Please provide the domain only (without http/https protocol).{RESET}")
                             continue
                         if validate_and_check_url(f"https://{url}"):
                             subdomains_enum(url)
@@ -426,6 +443,7 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
