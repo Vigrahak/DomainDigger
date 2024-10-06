@@ -1,6 +1,5 @@
 # domaindigger.py
 
-# Importing Libraries
 import logging
 import os
 import shutil
@@ -30,29 +29,30 @@ from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.firefox.service import Service as FirefoxService
 
 # Define colors
+RESET = '\033[0m'
+WHITE = '\033[1;37m'
+BLUE = '\033[1;34m'
+MAGENTA = '\033[1;35m'
 RED = '\033[1;31m'
 GREEN = '\033[1;32m'
-LTCYAN = '\033[1;36m'
 YELLOW = '\033[1;33m'
-BLUE = '\033[1;34m'
-WHITE = '\033[1;37m'
-RESET = '\033[0m'
+CYAN = '\033[1;36m'
 
 # Define hardcoded extensions
 IGNORED_EXTENSIONS = ['txt', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']
 
 def print_banner():
-    print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
-    print(f"{LTCYAN}█                    » DomainDigger «                     █")
-    print(f"{LTCYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
+    print(f"{CYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
+    print(f"{CYAN}█                    » DomainDigger «                     █")
+    print(f"{CYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
     print("")
-    print(f"{LTCYAN}                                              - By Vigrahak{RESET}")
-    print(f"{RED}Have a beer :  {LTCYAN}https://www.paypal.com/paypalme/SourabhS1828")
+    print(f"{CYAN}                                              - By Vigrahak{RESET}")
+    print(f"{RED}Have a beer :  {CYAN}https://www.paypal.com/paypalme/SourabhS1828")
     print("")
 
 def print_help():
     print(f"{WHITE}Usage:{RESET} {BLUE}python3 domain_digger.py{RESET}")
-    print(f"{WHITE}Contact:{RESET} {LTCYAN}[vigrahak1828@gmail.com]{RESET}")
+    print(f"{WHITE}Contact:{RESET} {CYAN}[vigrahak1828@gmail.com]{RESET}")
     print("")
 
 def validate_and_check_url(url):
@@ -76,17 +76,28 @@ def validate_and_check_url(url):
 
 def get_status_code(url):
     try:
-        session = requests.Session()
-        retry = Retry(connect=10, backoff_factor=1)
-        adapter = HTTPAdapter(max_retries=retry)
-        session.mount('http://', adapter)
-        session.mount('https://', adapter)
-        response = session.get(url, timeout=30)
+        response = requests.get(url, timeout=30)
+        response.raise_for_status()  
         return response.status_code
     except requests.RequestException as e:
+        return -1 
+
+def print_result(code, url, folder_name):
+    try:
+        if code == -1:
+            return  # Unknown status code ke liye kuch nahi print kiya hai
+        else:
+            color = GREEN if 200 <= code < 300 else YELLOW if 300 <= code < 400 else RED if 400 <= code < 500 else BLUE
+            print(f"  {BLUE}Status: {color}{code}{RESET}\t : {url}")
+            if code == 200:
+                with open(os.path.join(folder_name, "200_urls.txt"), "a") as f:
+                    f.write(f"{code}\t{url}\n")
+            else:
+                with open(os.path.join(folder_name, "all_urls.txt"), "a") as f:
+                    f.write(f"{code}\t{url}\n")
+    except OSError as e:
         logging.error(f"Error: {e}")
         print(f"{RED}Error: {e}{RESET}")
-        return None
 
 def create_result_folder ():
     if not os.path.exists("Results"):
@@ -103,28 +114,10 @@ def create_option_folder(option_name, url):
         print(f"{RED}Error: {e}{RESET}")
         return None
 
-def print_result(code, url, folder_name):
-    try:
-        if code is None:
-            color = RED
-            code = "Unknown"
-        else:
-            color = GREEN if 200 <= code < 300 else YELLOW if 300 <= code < 400 else RED if 400 <= code < 500 else BLUE
-        print(f"  {BLUE}Status: {color}{code}{RESET}\t : {url}")
-        if code == 200:
-            with open(os.path.join(folder_name, "200_urls.txt"), "a") as f:
-                f.write(f"{code}\t{url}\n")
-        else:
-            with open(os.path.join(folder_name, "all_urls.txt"), "a") as f:
-                f.write(f"{code}\t{url}\n")
-    except OSError as e:
-        logging.error(f"Error: {e}")
-        print(f"{RED}Error: {e}{RESET}")
-
 def archive_url(url):
-    print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
-    print(f"{LTCYAN}█                     » Archive URL «                     █")
-    print(f"{LTCYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
+    print(f"{CYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
+    print(f"{CYAN}█                     » Archive URL «                     █")
+    print(f"{CYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
     print("")
 
     folder_name = create_option_folder("Archive_URL", url)
@@ -144,9 +137,9 @@ def archive_url(url):
         print(f"{RED}Error: {e}{RESET}")
 
 def parameter_url(url):
-    print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
-    print(f"{LTCYAN}█                    » Parameter URL «                    █")
-    print(f"{LTCYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
+    print(f"{CYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
+    print(f"{CYAN}█                    » Parameter URL «                    █")
+    print(f"{CYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
     print("")
 
     folder_name = create_option_folder("Parameter_URL", url)
@@ -171,9 +164,9 @@ def parameter_url(url):
         print(f"{RED}Error: {e}{RESET}")
 
 def crawl_website(url):
-    print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
-    print(f"{LTCYAN}█                    » Crawl Website «                    █")
-    print(f"{LTCYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
+    print(f"{CYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
+    print(f"{CYAN}█                    » Crawl Website «                    █")
+    print(f"{CYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
     print("")
 
     folder_name = create_option_folder("Crawl_Website", url)
@@ -291,14 +284,14 @@ def crawl_website(url):
     print(f"{GREEN} Browser closed.{RESET}")
 
     crawled_urls_file = os.path.join(folder_name, urlparse(redirected_url).netloc + '_crawled_urls.txt')
-    print(f"{GREEN} CRAWLED URLs : {RESET}{LTCYAN}{crawled_urls_file}{RESET}")
+    print(f"{GREEN} CRAWLED URLs : {RESET}{CYAN}{crawled_urls_file}{RESET}")
     print(f"{GREEN} Total URLs crawled: {len(crawled_urls)}{RESET}")
 
 
 def subdomains_enum(url):
-    print(f"{LTCYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
-    print(f"{LTCYAN}█                   » SubDomains Enum «                   █")
-    print(f"{LTCYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
+    print(f"{CYAN}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
+    print(f"{CYAN}█                   » SubDomains Enum «                   █")
+    print(f"{CYAN}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
     print("")
 
     url = url.replace("www.", "")
@@ -314,16 +307,10 @@ def subdomains_enum(url):
 
     try:
         response = requests.get(f"https://crt.sh?q=%.{url}&output=json")
+        response.raise_for_status()  # Raise an exception for HTTP errors
     except requests.RequestException as e:
         logging.error(f"Error: {e}")
         print(f"{RED}Error: {e}{RESET}")
-        return
-
-    if response.status_code != 200:
-        logging.error(
-            f"Failed to retrieve results for url {url}. Status code: {response.status_code }")
-        print(
-            f"{RED}Failed to retrieve results for url {url}. Status code: {response.status_code}{RESET}")
         return
 
     try:
@@ -443,7 +430,6 @@ def main():
     except Exception as e:
         print(f"Error: {e}")
         sys.exit(1)
-
 
 if __name__ == "__main__":
     main()
