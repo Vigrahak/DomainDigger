@@ -27,16 +27,17 @@ from selenium.common.exceptions import WebDriverException, NoAlertPresentExcepti
 from selenium.webdriver.edge.service import Service as EdgeService
 from selenium.webdriver.chrome.service import Service as ChromeService
 from selenium.webdriver.firefox.service import Service as FirefoxService
+from colorama import init, Fore, Style
 
-# Define colors
-RESET = '\033[0m'
-WHITE = '\033[1;37m'
-BLUE = '\033[1;34m'
-MAGENTA = '\033[1;35m'
-RED = '\033[1;31m'
-GREEN = '\033[1;32m'
-YELLOW = '\033[1;33m'
-CYAN = '\033[1;36m'
+# Color variables
+RED = Style.BRIGHT + Fore.RED
+GREEN = Style.BRIGHT + Fore.GREEN
+CYAN = Style.BRIGHT + Fore.CYAN
+YELLOW = Style.BRIGHT + Fore.YELLOW
+BLUE = Style.BRIGHT + Fore.BLUE
+WHITE = Style.BRIGHT + Fore.WHITE
+MAGENTA = Style.BRIGHT + Fore.MAGENTA
+RESET = Style.RESET_ALL
 
 # Define hardcoded extensions
 IGNORED_EXTENSIONS = ['txt', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']
