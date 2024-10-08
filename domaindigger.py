@@ -43,12 +43,9 @@ RESET = Style.RESET_ALL
 IGNORED_EXTENSIONS = ['txt', 'pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']
 
 def print_banner():
-    print(f"{MAGENTA}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
-    print(f"{MAGENTA}█                    » DomainDigger «                     █")
-    print(f"{MAGENTA}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
-    print("")
-    print(f"{CYAN}                                              - By Vigrahak{RESET}")
-    print(f"{RED}Have a beer :  {CYAN}https://www.paypal.com/paypalme/SourabhS1828")
+    print(f"{BLUE}█▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀█")
+    print(f"{BLUE}█                    » DomainDigger «                     █")
+    print(f"{BLUE}█▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄▄█{RESET}")
     print("")
 
 def print_help():
